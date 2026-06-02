@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Protocol
 
 from prism.envs.bugfix import ACTION_SPACE
-from prism.features import feature_index, state_feature_indices, state_features
+from prism.features import feature_index, state_features
 from prism.types import Action
 
 
@@ -227,4 +227,3 @@ class SoftmaxPolicyAgent:
             for action_weights in raw["weights"]
         ]
         return policy
-
