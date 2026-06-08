@@ -1,3 +1,10 @@
+"""Toy interactive bug-fixing environment.
+
+A tiny tool-use loop -- inspect files, search, apply a patch, run tests, submit
+-- over a small library of seeded bugs. Each bug needs a specific patch action,
+so solving requires reading the state and choosing the matching fix. Preserves
+the shape of long-horizon agent training while running instantly.
+"""
 from __future__ import annotations
 
 import itertools

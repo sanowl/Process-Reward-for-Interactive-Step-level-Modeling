@@ -1,14 +1,41 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "prism-agent-rl"
 version = "0.1.0"
 description = "Process reward modeling prototype for interactive multi-step agents."
 readme = "README.md"
 requires-python = ">=3.10"
+license = "Apache-2.0"
+keywords = [
+    "process-reward-model",
+    "reinforcement-learning",
+    "llm-agents",
+    "reward-shaping",
+    "robotics",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/sanowl/Process-Reward-for-Interactive-Step-level-Modeling"
+Repository = "https://github.com/sanowl/Process-Reward-for-Interactive-Step-level-Modeling"
 
 [project.scripts]
 prism = "prism.cli:main"
 
+[tool.setuptools]
+py-modules = ["train"]
+
+[tool.setuptools.packages.find]
+include = ["prism*"]
+
 [tool.pytest.ini_options]
 pythonpath = ["."]
-

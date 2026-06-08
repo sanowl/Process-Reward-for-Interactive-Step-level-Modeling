@@ -94,9 +94,14 @@ prism/
   prm_model.py        # linear sigmoid process reward model
   prm_trainer.py      # PRM training loop
   registry.py         # EnvSpec registry mapping --env name -> components
-train.py              # end-to-end experiment driver
+  experiment.py       # end-to-end experiment driver
+train.py              # thin CLI shim -> prism.experiment:main
 tests/                # unit tests for both environments and the labeler
 ```
+
+For internals (the math behind each stage, and how to add your own environment),
+see [ARCHITECTURE.md](ARCHITECTURE.md). To contribute, see
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Reward shaping
 

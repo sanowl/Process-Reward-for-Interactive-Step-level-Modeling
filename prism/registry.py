@@ -1,3 +1,11 @@
+"""Environment registry.
+
+Bundles everything the experiment driver needs for a given task domain -- the
+environment factory, task factory, action space, rollout heuristic, and policy
+factory -- behind a name. Adding a new environment is a matter of writing the
+env module and registering one ``EnvSpec`` here; the rest of the pipeline is
+unchanged. See ``ARCHITECTURE.md`` for a walkthrough.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass

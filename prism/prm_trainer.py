@@ -1,3 +1,9 @@
+"""Training loop for the process reward model.
+
+Splits labelled steps into train/validation, runs epoch-wise SGD on the PRM, and
+records per-epoch train/validation MSE. ``train_prm_from_file`` wires the JSONL
+labels straight through to a saved model for command-line use.
+"""
 from __future__ import annotations
 
 import csv

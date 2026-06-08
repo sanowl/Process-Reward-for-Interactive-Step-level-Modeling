@@ -1,3 +1,12 @@
+"""Monte-Carlo process labeling.
+
+Estimates a process label for a (state, action) pair by replaying the prefix up
+to that action and then sampling a rollout policy to completion several times;
+the empirical success rate is the label. The ``*_action_space`` variants label
+*every* candidate action at every visited state, yielding a contrastive dataset
+for the PRM. Rollouts run in parallel with per-rollout seeded RNGs for
+determinism.
+"""
 from __future__ import annotations
 
 import json

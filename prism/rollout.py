@@ -1,3 +1,10 @@
+"""Episode rollout and trajectory (de)serialization.
+
+Runs a policy in an environment to produce ``Trajectory`` records. The
+environment is supplied through an ``env_factory`` (``(task, max_steps) -> env``)
+so the same rollout code drives any environment that implements the
+``Environment`` protocol defined here.
+"""
 from __future__ import annotations
 
 import json

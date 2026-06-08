@@ -1,3 +1,11 @@
+"""Policies used to act in the environments and to drive rollouts.
+
+Provides the ``Policy`` protocol, a rule-based ``HeuristicPolicyAgent`` (and the
+manipulation analogue), and a feature-linear ``SoftmaxPolicyAgent`` trained with
+a PPO-clipped policy gradient plus entropy regularization. The softmax agent is
+the one optimized in the experiment; the heuristic agents provide competent
+rollout policies for Monte-Carlo labeling.
+"""
 from __future__ import annotations
 
 import json

@@ -1,3 +1,10 @@
+"""The process reward model.
+
+A feature-linear model with a logistic (sigmoid) head that scores a single
+(state, action) pair in [0, 1] -- an estimate of the probability that the step
+leads to eventual success. Trained with online sigmoid-MSE SGD against the
+Monte-Carlo labels.
+"""
 from __future__ import annotations
 
 import json

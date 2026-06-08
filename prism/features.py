@@ -1,3 +1,11 @@
+"""Hashed sparse features for states and (state, action) pairs.
+
+States are tokenized and combined with a handful of hand-written keyword and
+task-type indicators, then hashed into a fixed-size index space (the hashing
+trick). ``prm_features`` additionally emits action identity features and
+state x action cross features, which give the linear PRM its discriminative
+power. The same feature space backs both the policy and the reward model.
+"""
 from __future__ import annotations
 
 import hashlib

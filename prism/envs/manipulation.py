@@ -1,3 +1,12 @@
+"""Tabletop pick-and-place environment (robotics-shaped).
+
+A discrete macro-action manipulation task: move the gripper, select a grasp that
+matches the object (cube -> pinch, sphere -> suction, bowl -> two-hand),
+transport it, and release it on the target. Same interface as the bug-fix env,
+so the shared MC labeler / PRM / policy loop run on it unchanged. Tiny and fast,
+but it preserves the structure of long-horizon manipulation: perceive, choose
+the right tool, sequence sub-skills, and submit.
+"""
 from __future__ import annotations
 
 import itertools

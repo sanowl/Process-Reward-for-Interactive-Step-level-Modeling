@@ -1,3 +1,10 @@
+"""Core data types shared across the pipeline.
+
+Defines the serializable records that flow between components: ``Action`` and
+``TaskSpec`` (inputs), ``Step``/``Trajectory`` (rollouts), and ``LabelledStep``
+(a Monte-Carlo process label). All types round-trip through ``to_dict``/
+``from_dict`` so trajectories and labels can be streamed as JSONL.
+"""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
