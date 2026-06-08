@@ -46,6 +46,25 @@ def state_feature_names(state: str) -> list[str]:
     if "age > 18" in lower or "18 should be adult" in lower:
         names.append("bug:comparison")
 
+    # Manipulation environment signals (only fire on robot states).
+    if "holding=object" in lower:
+        names.append("kw:holding")
+    if "placed=yes" in lower:
+        names.append("kw:placed")
+    if "gripper=object" in lower:
+        names.append("kw:over_object")
+    if "gripper=target" in lower:
+        names.append("kw:over_target")
+    if "out of reach" in lower:
+        names.append("kw:object_lost")
+
+    if "object=cube" in lower:
+        names.append("obj:cube")
+    if "object=sphere" in lower:
+        names.append("obj:sphere")
+    if "object=bowl" in lower:
+        names.append("obj:bowl")
+
     return names
 
 
@@ -73,7 +92,11 @@ def prm_features(state: str, action: Action, num_features: int) -> dict[int, flo
         names.append(f"action_arg:{action.argument}")
 
     for state_name in state_feature_names(state):
-        if state_name.startswith("bug:") or state_name.startswith("kw:"):
+        if (
+            state_name.startswith("bug:")
+            or state_name.startswith("kw:")
+            or state_name.startswith("obj:")
+        ):
             names.append(f"cross:{state_name}|{action.key}")
 
     return sparse_features(names, num_features)

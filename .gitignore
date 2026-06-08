@@ -9,3 +9,6 @@ dist/
 build/
 *.egg-info/
 
+# experiment outputs
+runs/
+

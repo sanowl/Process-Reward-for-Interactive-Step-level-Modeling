@@ -4,10 +4,27 @@ import json
 import random
 from collections.abc import Iterable
 from pathlib import Path
+from typing import Callable, Protocol
 
 from prism.agents import Policy, sample_action
 from prism.envs.bugfix import ToyBugFixEnv
-from prism.types import Step, TaskSpec, Trajectory
+from prism.types import Action, Step, TaskSpec, Trajectory
+
+
+class Environment(Protocol):
+    """Minimal interface an environment must satisfy to run in the pipeline."""
+
+    done: bool
+    success: bool
+
+    def state_text(self) -> str: ...
+    def available_actions(self) -> tuple[Action, ...]: ...
+    def step(self, action: Action) -> tuple[str, bool, bool]: ...
+    def replay(self, actions: list[Action]) -> None: ...
+
+
+# A factory builds a fresh environment for one episode: (task, max_steps) -> env.
+EnvFactory = Callable[[TaskSpec, int], Environment]
 
 
 def run_episode(
@@ -16,11 +33,12 @@ def run_episode(
     *,
     max_steps: int = 8,
     rng: random.Random | None = None,
+    env_factory: EnvFactory = ToyBugFixEnv,
 ) -> Trajectory:
-    """Run one policy attempt in the interactive bug-fixing environment."""
+    """Run one policy attempt in an interactive environment."""
 
     rng = rng or random.Random()
-    env = ToyBugFixEnv(task, max_steps=max_steps)
+    env = env_factory(task, max_steps)
     trajectory = Trajectory(task=task)
 
     while not env.done:
@@ -52,6 +70,7 @@ def collect_trajectories(
     episodes_per_task: int = 1,
     max_steps: int = 8,
     seed: int = 0,
+    env_factory: EnvFactory = ToyBugFixEnv,
 ) -> list[Trajectory]:
     """Collect full task attempts for a set of tasks."""
 
@@ -59,7 +78,15 @@ def collect_trajectories(
     trajectories: list[Trajectory] = []
     for task in tasks:
         for _ in range(episodes_per_task):
-            trajectories.append(run_episode(policy, task, max_steps=max_steps, rng=rng))
+            trajectories.append(
+                run_episode(
+                    policy,
+                    task,
+                    max_steps=max_steps,
+                    rng=rng,
+                    env_factory=env_factory,
+                )
+            )
     return trajectories
 
 

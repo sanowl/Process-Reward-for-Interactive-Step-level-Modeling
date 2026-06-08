@@ -156,6 +156,41 @@ class SoftmaxPolicyAgent:
         policy._add_prior("bug:comparison", "edit:fix_comparison", 3.00 * strength)
         return policy
 
+    @classmethod
+    def manipulation_priors(
+        cls,
+        actions: tuple[Action, ...],
+        strength: float = 0.45,
+        temperature: float = 1.0,
+        seed: int = 0,
+    ) -> "SoftmaxPolicyAgent":
+        """A weak warm-start prior for the pick-and-place environment.
+
+        Encodes the canonical sequence loosely so the policy occasionally
+        completes a task (giving terminal reward something to latch onto),
+        while leaving plenty of room for the PRM dense reward to improve on it.
+        """
+        policy = cls(actions=actions, temperature=temperature, seed=seed)
+        # Default: move toward the object; discourage destructive/finishing moves.
+        policy._add_prior("bias", "move_to:object", 0.60 * strength)
+        policy._add_prior("bias", "push", -1.50 * strength)
+        policy._add_prior("bias", "done", -1.20 * strength)
+        policy._add_prior("bias", "release", -0.60 * strength)
+
+        # Object-specific grasp selection.
+        policy._add_prior("obj:cube", "grasp_pinch", 1.20 * strength)
+        policy._add_prior("obj:sphere", "grasp_suction", 1.20 * strength)
+        policy._add_prior("obj:bowl", "grasp_two_hand", 1.20 * strength)
+
+        # Stage-specific guidance keyed off the structured status line.
+        policy._add_prior("kw:over_object", "grasp_pinch", 0.50 * strength)
+        policy._add_prior("kw:over_object", "grasp_suction", 0.50 * strength)
+        policy._add_prior("kw:over_object", "grasp_two_hand", 0.50 * strength)
+        policy._add_prior("kw:holding", "move_to:target", 2.00 * strength)
+        policy._add_prior("kw:over_target", "release", 2.50 * strength)
+        policy._add_prior("kw:placed", "done", 4.00 * strength)
+        return policy
+
     def _add_prior(self, feature_name: str, action_key: str, value: float) -> None:
         action_index = self._action_index(action_key)
         if action_index is None:
@@ -183,16 +218,67 @@ class SoftmaxPolicyAgent:
             for action, exp_logit in zip(actions, exp_logits, strict=True)
         }
 
-    def update_logprob(self, state: str, target: Action, scale: float) -> None:
+    def update_logprob(
+        self,
+        state: str,
+        target: Action,
+        scale: float,
+        *,
+        old_prob: float | None = None,
+        clip_ratio: float = 0.2,
+    ) -> None:
+        """PPO-clipped policy gradient step.
+
+        If `old_prob` is supplied the update is scaled by the clipped
+        importance ratio r = π_new / π_old, matching the PPO surrogate.
+        Without it the update reduces to vanilla policy gradient.
+        """
         if target not in self.actions:
             return
         features = state_features(state, self.num_features)
         distribution = self.action_distribution(state, self.actions)
+        new_prob = distribution[target]
+
+        if old_prob is not None and old_prob > 1e-9:
+            ratio = new_prob / old_prob
+            clipped = max(1.0 - clip_ratio, min(1.0 + clip_ratio, ratio))
+            effective_scale = scale * min(ratio, clipped)
+        else:
+            effective_scale = scale
+
         for action_index, action in enumerate(self.actions):
             coefficient = (1.0 if action == target else 0.0) - distribution[action]
             if abs(coefficient) < 1e-12:
                 continue
-            update = scale * coefficient
+            update = effective_scale * coefficient
+            action_weights = self.weights[action_index]
+            for feature_idx, value in features.items():
+                new_value = action_weights.get(feature_idx, 0.0) + update * value
+                action_weights[feature_idx] = max(min(new_value, 8.0), -8.0)
+
+    def update_entropy(self, state: str, coef: float) -> None:
+        """Entropy-regularization step (gradient ascent on policy entropy).
+
+        Policy gradient on a tiny action space collapses to a single action
+        without this; the entropy bonus keeps the distribution spread out so
+        the agent keeps exploring long enough to discover the solution path.
+
+        The entropy of a softmax has gradient dH/dlogit_i = -π_i (ln π_i + H)
+        w.r.t. each action logit; we ascend it through the linear features.
+        """
+        if coef <= 0.0:
+            return
+        features = state_features(state, self.num_features)
+        distribution = self.action_distribution(state, self.actions)
+        entropy = -sum(
+            prob * math.log(prob) for prob in distribution.values() if prob > 0.0
+        )
+        for action_index, action in enumerate(self.actions):
+            prob = distribution[action]
+            if prob <= 0.0:
+                continue
+            gradient = -prob * (math.log(prob) + entropy)
+            update = coef * gradient
             action_weights = self.weights[action_index]
             for feature_idx, value in features.items():
                 new_value = action_weights.get(feature_idx, 0.0) + update * value
