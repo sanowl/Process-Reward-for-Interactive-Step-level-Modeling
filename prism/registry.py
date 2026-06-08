@@ -51,11 +51,13 @@ def _bugfix_policy(
 def _manipulation_policy(
     *, strength: float, temperature: float, seed: int
 ) -> SoftmaxPolicyAgent:
-    # No hand-coded priors for the robot policy: it starts near-uniform and must
-    # learn the pick-and-place sequence from reward alone. `strength` is accepted
-    # for a uniform interface but intentionally unused.
-    return SoftmaxPolicyAgent(
+    # Warm-start the robot policy with a weak prior over the canonical
+    # pick-and-place sequence. At strength=0 this reduces to a near-uniform
+    # policy; a positive strength gives terminal reward something to latch onto
+    # while leaving room for the PRM dense reward to improve on it.
+    return SoftmaxPolicyAgent.manipulation_priors(
         actions=manipulation.ACTION_SPACE,
+        strength=strength,
         temperature=temperature,
         seed=seed,
     )
